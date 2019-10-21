@@ -74,7 +74,7 @@ helpers.sendTwilioSMS = function(phone, msg, callback){
 
         // Configure the request details
         var requestDetails = {
-            'protocol': 'https',
+            'protocol': 'https:',
             'hostname': 'api.twilio.com',
             'method': 'POST',
             'path': '2010-04-01/Accounts/' + config.twilio.accoundSid + '/Messages.json',
@@ -83,10 +83,7 @@ helpers.sendTwilioSMS = function(phone, msg, callback){
                 'Content-Type': 'application/x-www-form-urlencoded',
                 'Content-Length': Buffer.byteLength(stringPayload)
             }
-            // 'agent': false
         };
-
-        // requestDetails.agent = new https.Agent(requestDetails);
 
         // Instatntiate request object
         var req = https.request(requestDetails, function(res){
@@ -98,13 +95,13 @@ helpers.sendTwilioSMS = function(phone, msg, callback){
                 callback(false);
             }
             else{
-                callback('Status code ' + status00);
+                callback('Status code ' + status);
             }
         });
 
         // Bind to the error event so it doesn't get thrown
-        req.on(error, function(e){
-            callback(e0);
+        req.on('error', function(e){
+            callback(e);
         });
 
         // Add the payload
