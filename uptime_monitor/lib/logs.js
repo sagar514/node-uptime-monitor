@@ -67,7 +67,7 @@ lib.list = function(includeCompressedFiles, callback){
     });
 }
 
-// Function to compress log file
+// Function to compress log file using zlib
 lib.compress = function(fileId, newFileId, callback){
     
     var srcFile = fileId+".log",
@@ -102,6 +102,27 @@ lib.compress = function(fileId, newFileId, callback){
                         callback(err);
                     }
                 });
+            });
+        }
+        else{
+            callback(err);
+        }
+    });
+}
+
+// Function to de-compress ".gz.b64" file to string
+lib.decompress = function(fileId, callback){
+    fs.readFile(lib.baseDir+fileId+".gz.b64", function(err, str){
+        if(!err && str){
+            // Decompress the data
+            var inputBuffer = Buffer.from(str, "base64");
+            zlib.unzip(inputBuffer, function(err, outputBuffer){
+                if(!err && outputBuffer){
+                    callback(false, outputBuffer.toString());
+                }
+                else{
+                    callback(err);
+                }
             });
         }
         else{
