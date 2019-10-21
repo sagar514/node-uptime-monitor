@@ -8,7 +8,6 @@ var http = require('http'),
     https = require('https'),
     url = require('url'),
     config = require('./config'),
-    fs = require('fs'),
     _data = require('./data'),
     helpers = require('./helpers'),
     path = require('path');
@@ -140,7 +139,7 @@ workers.processCheckOutcome = function(checkData, checkOutcome){
 
     // Mark if check-state is change
     var state = !checkOutcome.error && checkOutcome.responseCode && checkData.successCodes.indexOf(checkOutcome.responseCode) > -1 ? 'up' : 'down';
-
+    
     // Decide if alert is needed
     var requireAlert = checkData.lastChecked && checkData.state != state ? true : false;
 
@@ -181,7 +180,7 @@ workers.alertUser = function(checkData){
 workers.loop = function(){
     setInterval(function(){
         workers.gatherAllChecks();
-    }, 1 * 5 * 1000);
+    }, 5 * 1000);
 }
 
 // Init script
