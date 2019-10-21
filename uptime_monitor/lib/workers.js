@@ -10,7 +10,8 @@ var http = require('http'),
     config = require('./config'),
     _data = require('./data'),
     helpers = require('./helpers'),
-    path = require('path');
+    path = require('path'),
+    _log = require('./logs');
 
 // Instantiate worker object
 var workers = {};
@@ -142,10 +143,14 @@ workers.processCheckOutcome = function(checkData, checkOutcome){
     
     // Decide if alert is needed
     var requireAlert = checkData.lastChecked && checkData.state != state ? true : false;
+    var timeOfCheck = Date.now();
+
+    // Log data
+    workers.log(checkData, checkOutcome, state, requireAlert, timeOfCheck);
 
     // Update check-data
     checkData.state = state;
-    checkData.lastChecked = Date.now();
+    checkData.lastChecked = timeOfCheck;
     
     _data.update("checks", checkData.checkId, checkData, function(err){
         if(!err){
@@ -176,11 +181,79 @@ workers.alertUser = function(checkData){
     });    
 }
 
+workers.log = function(checkData, checkOutcome, state, requireAlert, timeOfCheck){
+    // Form log data
+    var logData = {
+        "check": checkData,
+        "outcome": checkOutcome,
+        "state": state,
+        "alert": requireAlert,
+        "time": timeOfCheck
+    };
+
+    // Convert log-data to string
+    var logDataString = JSON.stringify(logData);
+
+    // Log file name
+    var logFileName = checkData.checkId;
+    
+    _log.append(logFileName, logDataString, function(err){
+        if(!err){
+            console.log("Success: Logged to file");
+        }
+        else{
+            console.log("Error: Logging to file");
+        }
+    });
+}
+
 // Timer to execute worker-process every minute
 workers.loop = function(){
     setInterval(function(){
         workers.gatherAllChecks();
     }, 5 * 1000);
+}
+
+// Compress or rotate logs
+workers.compressLogs = function(){
+    // List all log (non compressed) files
+    _log.list(false, function(err, logFiles){
+        if(!err && logFiles && logFiles.length > 0){
+            logFiles.forEach(function(fileName){
+                // Compress data to new file
+                var logId = fileName.replace(".log", ""),
+                    newFileName = logId + "-" + Date.now();
+
+                // Compress file
+                _log.compress(logId, newFileName, function(err){
+                    if(!err){
+                        // Truncate original log file
+                        _log.truncate(logId, function(err){
+                            if(!err){
+                                console.log("Success truncating log file");
+                            }
+                            else{
+                                console.log("Error truncating log file: " + logId+".log", err);
+                            }
+                        });
+                    }
+                    else{
+                        console.log("Error compressing file: " + logId+".log", err);
+                    }
+                });
+            });
+        }
+        else{
+            console.log("Error: No log files found to compress");
+        }
+    });
+}
+
+// Loop to compress logs
+workers.logCompressionLoop = function(){
+    setInterval(function(){
+        workers.compressLogs();
+    }, 24 * 60 * 60 * 1000);
 }
 
 // Init script
@@ -190,6 +263,12 @@ workers.init = function(){
 
     // Execute checks in loop for later on
     workers.loop();
+
+    // Compress logs immediately
+    workers.compressLogs();
+
+    // Loop to compress logs later on
+    workers.logCompressionLoop();
 }
 
 // Export module
