@@ -100,15 +100,25 @@ server.unifiedServer = function(req, res){
             payload: helpers.parseJsonToObject(buffer)
         };
 
-        choosenHandler(data, function(statusCode, payload){
+        choosenHandler(data, function(statusCode, payload, contentType){
 
+            contentType = typeof(contentType) == 'string' ? contentType : 'json';
+            
             statusCode = typeof(statusCode) == 'number' ? statusCode : 200;
-            payload = typeof(payload) == 'object' ? payload : {};
             
-            var payloadString = JSON.stringify(payload);
-            
+            if(contentType == "json"){
+                payload = typeof(payload) == 'object' ? payload : {};
+                var payloadString = JSON.stringify(payload);
+                res.setHeader('content-type', 'application/json');
+            }
+
+            if(contentType == "html"){
+                payload = typeof(payload) == 'string' ? payload : "";
+                var payloadString = payload;
+                res.setHeader('content-type', 'text/html');
+            }
+
             // Send the response
-            res.setHeader('content-type', 'application/json');
             res.writeHead(statusCode);
             res.end(payloadString);
 
@@ -128,9 +138,18 @@ server.unifiedServer = function(req, res){
 server.routes = {
     'sample': handlers.sample,
     'ping': handlers.ping,
-    'users': handlers.users,
-    'tokens': handlers.tokens,
-    'checks': handlers.checks
+    '': handlers.index,
+    'account/create': handlers.accountCreate,
+    'account/edit': handlers.accountEdit,
+    'account/deleted': handlers.accountDeleted,
+    'session/create': handlers.sessionCreate,
+    'session/delete': handlers.sessionDeleted,
+    'checks/all': handlers.checkList,
+    'checks/create': handlers.checkCreate,
+    'checks/edit': handlers.checkEdit,
+    'api/users': handlers.users,
+    'api/tokens': handlers.tokens,
+    'api/checks': handlers.checks
 };
 
 server.init = function(){

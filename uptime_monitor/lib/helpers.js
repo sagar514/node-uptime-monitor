@@ -8,7 +8,8 @@ var crypto = require('crypto'),
     config = require('./config'),
     queryString = require('querystring'),
     https = require('https'),
-    fs = require('fs');
+    fs = require('fs'),
+    path = require('path');
 
 // helpers container
 var helpers = {};
@@ -116,7 +117,26 @@ helpers.sendTwilioSMS = function(phone, msg, callback){
     }
 }
 
+// Function to read templates
+helpers.getTemplate = function(templateName, callback){
+    templateName = typeof(templateName) == "string" && templateName.length > 0 ? templateName : false;
 
+    if(templateName){
+        var templateDir = path.join(__dirname + "/../templates/");
+
+        fs.readFile(templateDir+templateName+".html", "utf8", function(err, templateString){
+            if(!err && templateString && templateString.length > 0){
+                callback(false, templateString);
+            }
+            else{
+                callback("Error: No template found");
+            }
+        });
+    }
+    else{
+        callback("Error: Valid template name is not specified");
+    }
+}
 
 
 // Export helpers

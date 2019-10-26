@@ -11,6 +11,34 @@ var _data = require('./data'),
 // Define handlers
 var handlers = {};
 
+/*
+ * Web Handlers
+ *
+ */ 
+
+handlers.index = function(data, callback){
+
+    if(data.method == "get"){
+        helpers.getTemplate("index", function(err, str){
+            if(!err && str){
+                callback(200, str, "html");
+            }
+            else{
+                callback(500, undefined, "html");
+            }
+        });
+    }
+    else{
+        callback(405, undefined, "html");
+    }
+}
+
+
+/*
+ * API Handlers
+ *
+ */ 
+
 // Sample handler
 handlers.sample = function(data, callback){
     callback(406, {'name': 'sample handler'});
