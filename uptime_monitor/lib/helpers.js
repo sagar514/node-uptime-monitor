@@ -118,15 +118,17 @@ helpers.sendTwilioSMS = function(phone, msg, callback){
 }
 
 // Function to read templates
-helpers.getTemplate = function(templateName, callback){
+helpers.getTemplate = function(templateName, data, callback){
     templateName = typeof(templateName) == "string" && templateName.length > 0 ? templateName : false;
+    data = typeof(data) == "object" && data !== null ? data : {};
 
     if(templateName){
         var templateDir = path.join(__dirname + "/../templates/");
 
         fs.readFile(templateDir+templateName+".html", "utf8", function(err, templateString){
             if(!err && templateString && templateString.length > 0){
-                callback(false, templateString);
+                var finalString = helpers.interpolate(templateString, data);
+                callback(false, finalString);
             }
             else{
                 callback("Error: No template found");
@@ -138,6 +140,71 @@ helpers.getTemplate = function(templateName, callback){
     }
 }
 
+// Take a given string and data object, find/replace all keys within it
+helpers.interpolate = function(str, data){
+    str = typeof(str) == "string" && str.length > 0 ? str : "";
+    data = typeof(data) == "object" && data !== null ? data : {};
+    
+    for(var keyName in config.templateGlobals){
+        if(config.templateGlobals.hasOwnProperty(keyName)){
+            data["global."+keyName] = config.templateGlobals[keyName];
+        }
+    }
+    
+    for(var key in data){
+        var replace = data[key],
+            find = "{"+key+"}";
+
+        str = str.replace(find, replace);
+    }
+
+    return str;
+}
+
+// Function to add universal (header and footer) templates
+helpers.addUniversalTemplates = function(str, data, callback){
+    str = typeof(str) == "string" && str.length > 0 ? str : "";
+    data = typeof(data) == "object" && data !== null ? data : {};
+    
+    // get header template
+    helpers.getTemplate("_header", data, function(err, headerTemplateString){
+        if(!err && headerTemplateString){
+            helpers.getTemplate("_footer", data, function(err, footerTemplateString){
+                if(!err && footerTemplateString){
+                    var fullTemplateString = headerTemplateString + str + footerTemplateString;
+                    callback(false, fullTemplateString);
+                }
+                else{
+                    callback("Error could not get footer template");
+                }
+            });
+        }
+        else{
+            callback("Error could not get header template");
+        }
+    });
+}
+
+// Get static assets
+helpers.getStaticAsset = function(fileName, callback){
+    fileName = typeof(fileName) == "string" && fileName.length > 0 ? fileName : false;
+
+    if(fileName){
+        var publicDir = path.join(__dirname + "/../public/");
+
+        fs.readFile(publicDir+fileName, "utf8", function(err, data){
+            if(!err && data){
+                callback(false, data);
+            }
+            else{
+                callback("Error could not get specified file");
+            }
+        });
+    }
+    else{
+        callback("A valid file name is not provided");
+    }
+}
 
 // Export helpers
 module.exports = helpers;

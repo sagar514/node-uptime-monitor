@@ -1,5 +1,5 @@
 /*
- * Workers relared tasks
+ * Workers related tasks
  *
  */ 
 
@@ -38,6 +38,7 @@ workers.gatherAllChecks = function(){
         }
     });
 }
+
 // Sanity-check the check-data
 workers.validateCheckData = function(checkData = originalCheckData){
 
