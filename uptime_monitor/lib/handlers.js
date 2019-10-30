@@ -78,6 +78,37 @@ handlers.accountCreate = function(data, callback){
     }
 }
 
+// Session Create
+handlers.sessionCreate = function(data, callback){
+    if(data.method == "get"){
+
+        var templateData = {
+            'head.title': 'Login To Your Account',
+            'head.description': 'Enter Your Phone Number And Password',
+            'body.class': 'sessionCreate'
+        };
+
+        helpers.getTemplate("sessionCreate", templateData, function(err, str){
+            if(!err && str){
+                helpers.addUniversalTemplates(str, templateData, function(err, templateString){
+                    if(!err && templateString){
+                        callback(200, templateString, "html");
+                    }
+                    else{
+                        callback(500, undefined, "html");
+                    }
+                });
+            }
+            else{
+                callback(500, undefined, "html");
+            }
+        });
+    }
+    else{
+        callback(405, undefined, "html");
+    }
+}
+
 // Favicon
 handlers.favicon = function(data, callback){
     if(data.method == "get"){
