@@ -171,7 +171,7 @@ server.routes = {
     'account/edit': handlers.accountEdit,
     'account/deleted': handlers.accountDeleted,
     'session/create': handlers.sessionCreate,
-    'session/delete': handlers.sessionDeleted,
+    'session/deleted': handlers.sessionDeleted,
     'checks/all': handlers.checkList,
     'checks/create': handlers.checkCreate,
     'checks/edit': handlers.checkEdit,

@@ -109,6 +109,69 @@ handlers.sessionCreate = function(data, callback){
     }
 }
 
+// Session Delete
+handlers.sessionDeleted = function(data, callback){
+    
+    if(data.method == "get"){
+
+        var templateData = {
+            'head.title': 'Logged Out',
+            'head.description': 'You have been logged out of your account.',
+            'body.class': 'sessionDeleted'
+        };
+
+        helpers.getTemplate("sessionDeleted", templateData, function(err, str){
+            if(!err && str){
+                helpers.addUniversalTemplates(str, templateData, function(err, templateString){
+                    if(!err && templateString){
+                        callback(200, templateString, "html");
+                    }
+                    else{
+                        callback(500, undefined, "html");
+                    }
+                });
+            }
+            else{
+                callback(500, undefined, "html");
+            }
+        });
+    }
+    else{
+        callback(405, undefined, "html");
+    }
+}
+
+// Account Edit
+handlers.accountEdit = function(data, callback){
+    
+    if(data.method == "get"){
+
+        var templateData = {
+            'head.title': 'Account Settings',
+            'body.class': 'accountEdit'
+        };
+
+        helpers.getTemplate("accountEdit", templateData, function(err, str){
+            if(!err && str){
+                helpers.addUniversalTemplates(str, templateData, function(err, templateString){
+                    if(!err && templateString){
+                        callback(200, templateString, "html");
+                    }
+                    else{
+                        callback(500, undefined, "html");
+                    }
+                });
+            }
+            else{
+                callback(500, undefined, "html");
+            }
+        });
+    }
+    else{
+        callback(405, undefined, "html");
+    }
+}
+
 // Favicon
 handlers.favicon = function(data, callback){
     if(data.method == "get"){
