@@ -14,6 +14,11 @@ var crypto = require('crypto'),
 // helpers container
 var helpers = {};
 
+// Sample for testing (Simply return a number)
+helpers.getNumber = function(){
+    return 1;
+};
+
 // Create SHA256 hash
 helpers.hash = function(str){
     if(typeof(str) == "string" && str.trim().length > 0){

@@ -13,7 +13,9 @@ var http = require('http'),
     handlers = require('./handlers'),
     _data = require('./data'),
     helpers = require('./helpers'),
-    path = require('path');
+    path = require('path'),
+    util = require('util'),
+    debug = util.debuglog('server');
 
 // Instantiate the server module object
 var server = {};
@@ -103,56 +105,16 @@ server.unifiedServer = function(req, res){
             payload: helpers.parseJsonToObject(buffer)
         };
 
-        choosenHandler(data, function(statusCode, payload, contentType){
-
-            contentType = typeof(contentType) == 'string' ? contentType : 'json';
-            
-            statusCode = typeof(statusCode) == 'number' ? statusCode : 200;
-            
-            var payloadString = "";
-            if(contentType == "json"){
-                payload = typeof(payload) == 'object' ? payload : {};
-                payloadString = JSON.stringify(payload);
-                res.setHeader('content-type', 'application/json');
-            }
-
-            if(contentType == "html"){
-                payloadString = typeof(payload) == 'string' ? payload : "";
-                res.setHeader('content-type', 'text/html');
-            }
-
-            if(contentType == "css"){
-                payloadString = typeof(payload) !== 'undefined' ? payload : "";
-                res.setHeader('content-type', 'text/css');
-            }
-
-            if(contentType == "favicon"){
-                payloadString = typeof(payload) !== 'undefined' ? payload : "";
-                res.setHeader('content-type', 'image/x-icon');
-            }
-
-            if(contentType == "png"){
-                payloadString = typeof(payload) !== 'undefined' ? payload : "";
-                res.setHeader('content-type', 'image/png');
-            }
-
-            if(contentType == "jpeg"){
-                payloadString = typeof(payload) !== 'undefined' ? payload : "";
-                res.setHeader('content-type', 'image/jpeg');
-            }
-
-            if(contentType == "plain"){
-                payloadString = typeof(payload) !== 'undefined' ? payload : "";
-                res.setHeader('content-type', 'text/plain');
-            }
-
-            // Send the response
-            res.writeHead(statusCode);
-            res.end(payloadString);
-
-            // Log
-            // console.log('Response', statusCode, payloadString);
-        });
+        try{
+            choosenHandler(data, function(statusCode, payload, contentType){
+                server.processHandlerResponse(res, method, trimmedPath, statusCode, payload, contentType);
+            });
+        }
+        catch(e){
+            debug(e);
+            server.processHandlerResponse(res, method, trimmedPath, 500, {"Error": "Something went wrong"}, "json");
+        }
+        
 
         // Log the request path
         // console.log(`Request path: ${trimmedPath} with method: ${method} with query string parameters: `, queryString);
@@ -160,6 +122,57 @@ server.unifiedServer = function(req, res){
         // console.log(`Request payload: `, buffer);
     });
 
+}
+
+// Process handler response
+server.processHandlerResponse = function(res, method, trimmedPath, statusCode, payload, contentType){
+    contentType = typeof(contentType) == 'string' ? contentType : 'json';
+    
+    statusCode = typeof(statusCode) == 'number' ? statusCode : 200;
+    
+    var payloadString = "";
+    if(contentType == "json"){
+        payload = typeof(payload) == 'object' ? payload : {};
+        payloadString = JSON.stringify(payload);
+        res.setHeader('content-type', 'application/json');
+    }
+
+    if(contentType == "html"){
+        payloadString = typeof(payload) == 'string' ? payload : "";
+        res.setHeader('content-type', 'text/html');
+    }
+
+    if(contentType == "css"){
+        payloadString = typeof(payload) !== 'undefined' ? payload : "";
+        res.setHeader('content-type', 'text/css');
+    }
+
+    if(contentType == "favicon"){
+        payloadString = typeof(payload) !== 'undefined' ? payload : "";
+        res.setHeader('content-type', 'image/x-icon');
+    }
+
+    if(contentType == "png"){
+        payloadString = typeof(payload) !== 'undefined' ? payload : "";
+        res.setHeader('content-type', 'image/png');
+    }
+
+    if(contentType == "jpeg"){
+        payloadString = typeof(payload) !== 'undefined' ? payload : "";
+        res.setHeader('content-type', 'image/jpeg');
+    }
+
+    if(contentType == "plain"){
+        payloadString = typeof(payload) !== 'undefined' ? payload : "";
+        res.setHeader('content-type', 'text/plain');
+    }
+
+    // Send the response
+    res.writeHead(statusCode);
+    res.end(payloadString);
+
+    // Log
+    // console.log('Response', statusCode, payloadString);
 }
 
 // Define Routes
@@ -179,7 +192,8 @@ server.routes = {
     'api/tokens': handlers.tokens,
     'api/checks': handlers.checks,
     'favicon.ico': handlers.favicon,
-    'public': handlers.public
+    'public': handlers.public,
+    'examples/error': handlers.exampleError
 };
 
 server.init = function(){

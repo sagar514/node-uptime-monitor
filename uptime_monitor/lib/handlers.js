@@ -239,6 +239,12 @@ handlers.public = function(data, callback){
  *
  */ 
 
+// Error handler
+handlers.exampleError = function(data, callback){
+    var err = new Error('Example error');
+    throw(err);
+}
+
 // Sample handler
 handlers.sample = function(data, callback){
     callback(406, {'name': 'sample handler'});
