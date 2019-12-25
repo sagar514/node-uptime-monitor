@@ -10,7 +10,7 @@ var readLine = require('readline'),
     events = require('events'),
     os = require('os'),
     v8 = require('v8'),
-    _data = require('./data'),
+    _data = require('./data-db'),
     _log = require('./logs'),
     helper = require('./helpers');
 

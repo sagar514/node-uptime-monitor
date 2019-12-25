@@ -112,6 +112,7 @@ server.unifiedServer = function(req, res){
         }
         catch(e){
             debug(e);
+            console.log(e);
             server.processHandlerResponse(res, method, trimmedPath, 500, {"Error": "Something went wrong"}, "json");
         }
         

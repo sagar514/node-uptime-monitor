@@ -4,9 +4,15 @@
  */ 
 
 // Dependencies
-var _data = require('./data'),
-    helpers = require('./helpers')
-    config = require('./config');
+// var _data = require('./data'),
+var _data = require('./data-db'),
+    helpers = require('./helpers'),
+    config = require('./config'),
+    _url = require('url'),
+    dns = require('dns'),
+    _performance = require('perf_hooks').performance,
+    util = require('util'),
+    debbug = util.debug('performance');
 
 // Define handlers
 var handlers = {};
@@ -308,7 +314,6 @@ handlers._users.post = function(data, callback){
                     // Create User
                     _data.create('users', phone, userObject, function(err){
                         if(err){
-                            console.log(err);
                             callback(500, {'Error': 'Could not create new user'});
                         }
                         else{
@@ -352,7 +357,7 @@ handlers._users.get = function(data, callback){
                         callback(200, data);
                     }
                     else{
-                        callback(404);
+                        callback(200, {"Error": "User with that phone doesn't exist"});
                     }
                 });
             }
@@ -531,18 +536,30 @@ handlers._tokens = {};
 // Optional data: none
 handlers._tokens.post = function(data, callback){
 
+    // _performance.mark('entered function');
+
     var phone = typeof(data.payload.phone) == 'string' && data.payload.phone.trim().length == 10 ? data.payload.phone : false,
         password = typeof(data.payload.password) == 'string' && data.payload.password.trim().length > 0 ? data.payload.password : false;
 
+    // _performance.mark('inputs validated');
+
     if(phone && password){
 
+        // _performance.mark('beginning user lookup');
+
         _data.read("users", phone, function(err, userData){
+
+            // _performance.mark('user lookup completed');
+
             if(!err && userData){
 
+                // _performance.mark('beginning hashing password');
                 var hashedEnteredPassword = helpers.hash(data.payload.password);
+                // _performance.mark('password hashing complete');
 
                 if(hashedEnteredPassword == userData.hashedPassword){
 
+                    // _performance.mark('creating data for token');
                     var tokenId = helpers.createRandomString(20),
                         expires = Date.now() + (1 * 60 * 60 * 1000),
                         tokenObject = {
@@ -551,7 +568,26 @@ handlers._tokens.post = function(data, callback){
                             'expires': expires
                         };
 
+                    // Store the token
+                    // _performance.mark('beginning storing token');
                     _data.create("tokens", tokenId, tokenObject, function(err){
+                        
+                        // _performance.mark('token storing complete');
+
+                        // Gather all measurements
+                        // _performance.measure('Beginning to end', 'entered function', 'token storing complete');
+                        // _performance.measure('Validating user input', 'entered function', 'inputs validated');
+                        // _performance.measure('User lookup', 'beginning user lookup', 'user lookup completed');
+                        // _performance.measure('Password hashing', 'beginning password hashing', 'password hashing complete');
+                        // _performance.measure('Token data creation', 'creating data for token', 'beginning storing token');
+                        // _performance.measure('Token storing', 'beginning storing token', 'token storing complete');
+
+                        // Log out all measurements
+                        // var measurements = _performance.getEntriesByType('measure');
+                        // measurements.forEach(function(measurement){
+                        //     debug('\x1b[33m%s\x1b[0m', measurement.name+' '+measurement.duration);
+                        // });
+
                         if(!err){
                             callback(200, tokenObject);
                         }
@@ -679,9 +715,9 @@ handlers._tokens.verifyToken = function(token, phone, callback){
             }
             else{
                 // Delete token file if expired
-                _data.delete("tokens", token, function(err){
-                    callback(false);
-                });
+                // _data.delete("tokens", token, function(err){
+                //     callback(false);
+                // });
 
             }
         }
@@ -738,38 +774,49 @@ handlers._checks.post = function(data, callback){
     
                                 if(userChecks.length < config.maxChecks){
                                     
-                                    var checkId = helpers.createRandomString(20),
-                                        checkObject = {
-                                            "checkId": checkId,
-                                            "userPhone": userPhone,
-                                            "protocol": protocol,
-                                            "url": url,
-                                            "method": method,
-                                            "successCodes": successCodes,
-                                            "timeOutSeconds": timeOutSeconds
-                                        };
-    
-                                    // create specified check
-                                    _data.create("checks", checkId, checkObject, function(err){
-                                        if(!err){
-    
-                                            userChecks.push(checkId);
-                                            userData.checks = userChecks;                                        
-    
-                                            // update user object
-                                            _data.update("users", userPhone, userData, function(err){
-                                                if(!err){
-                                                    callback(200, checkObject);
-                                                }
-                                                else{
-                                                    callback(500, {"Error": "Could not update user's check"});
-                                                }
-                                            });
+                                    // Verify that the URL given has DNS entries (and therefore can be resolve)
+                                    var parsedUrl = _url.parse(protocol+'://'+url, true),
+                                        hostName = typeof(parsedUrl.hostname) == 'string' && parsedUrl.hostname.length > 0 ? parsedUrl.hostname : false;
+
+                                    dns.resolve(hostName, function(err, records){
+                                        if(!err && records){
+                                            var checkId = helpers.createRandomString(20),
+                                            checkObject = {
+                                                "checkId": checkId,
+                                                "userPhone": userPhone,
+                                                "protocol": protocol,
+                                                "url": url,
+                                                "method": method,
+                                                "successCodes": successCodes,
+                                                "timeOutSeconds": timeOutSeconds
+                                            };
+        
+                                        // create specified check
+                                        _data.create("checks", checkId, checkObject, function(err){
+                                            if(!err){
+        
+                                                userChecks.push(checkId);
+                                                userData.checks = userChecks;                                        
+        
+                                                // update user object
+                                                _data.update("users", userPhone, userData, function(err){
+                                                    if(!err){
+                                                        callback(200, checkObject);
+                                                    }
+                                                    else{
+                                                        callback(500, {"Error": "Could not update user's check"});
+                                                    }
+                                                });
+                                            }
+                                            else{
+                                                callback(500, {"Error": "Could not create specified check"});
+                                            }
+                                        });
                                         }
                                         else{
-                                            callback(500, {"Error": "Could not create specified check"});
+                                            callback(400, {'Error': 'The hostname of the url entered did not resolve to any DNS entries'});
                                         }
-                                    });
+                                    });  
                                 }
                                 else{
                                     callback(400, {"Error": "Maximum number of "+ config.maxChecks +" checks exceeds"});
