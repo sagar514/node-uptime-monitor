@@ -11,7 +11,7 @@ var _data = require('./data-db'),
     _url = require('url'),
     dns = require('dns'),
     _performance = require('perf_hooks').performance,
-    util = require('util'),
+    util = require('util');
     // debbug = util.debug('performance');
 
 // Define handlers
