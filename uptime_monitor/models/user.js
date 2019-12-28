@@ -8,6 +8,7 @@ var userSchema = new Schema({
     "phone": String,
     "hashedPassword": String,
     "tosAgreement": Boolean,
+    "checks": Array,
     "createdAt": Date,
     "updatedAt": Date
 });

@@ -718,7 +718,7 @@ handlers._tokens.verifyToken = function(token, phone, callback){
                 // _data.delete("tokens", token, function(err){
                 //     callback(false);
                 // });
-
+                callback(false);
             }
         }
         else{
@@ -791,27 +791,27 @@ handlers._checks.post = function(data, callback){
                                                 "timeOutSeconds": timeOutSeconds
                                             };
         
-                                        // create specified check
-                                        _data.create("checks", checkId, checkObject, function(err){
-                                            if(!err){
-        
-                                                userChecks.push(checkId);
-                                                userData.checks = userChecks;                                        
-        
-                                                // update user object
-                                                _data.update("users", userPhone, userData, function(err){
-                                                    if(!err){
-                                                        callback(200, checkObject);
-                                                    }
-                                                    else{
-                                                        callback(500, {"Error": "Could not update user's check"});
-                                                    }
-                                                });
-                                            }
-                                            else{
-                                                callback(500, {"Error": "Could not create specified check"});
-                                            }
-                                        });
+                                            // create specified check
+                                            _data.create("checks", checkId, checkObject, function(err){
+                                                if(!err){
+            
+                                                    userChecks.push(checkId);
+                                                    userData.checks = userChecks;                                        
+            
+                                                    // update user object
+                                                    _data.update("users", userPhone, userData, function(err){
+                                                        if(!err){
+                                                            callback(200, checkObject);
+                                                        }
+                                                        else{
+                                                            callback(500, {"Error": "Could not update user's check"});
+                                                        }
+                                                    });
+                                                }
+                                                else{
+                                                    callback(500, {"Error": "Could not create specified check"});
+                                                }
+                                            });
                                         }
                                         else{
                                             callback(400, {'Error': 'The hostname of the url entered did not resolve to any DNS entries'});
