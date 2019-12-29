@@ -9,7 +9,8 @@ var crypto = require('crypto'),
     queryString = require('querystring'),
     https = require('https'),
     fs = require('fs'),
-    path = require('path');
+    path = require('path'),
+    unirest = require("unirest");
 
 // helpers container
 var helpers = {};
@@ -119,6 +120,45 @@ helpers.sendTwilioSMS = function(phone, msg, callback){
     }
     else{
         callback("Required parameters were missing or invalid");
+    }
+}
+
+// SMS API (Fast2SMS)
+helpers.sendSMS = function(phone, msg, callback){
+
+    // validate parameters
+    var phone = typeof(phone) == "string" && phone.trim().length == 10 ? phone.trim() : false,
+        msg = typeof(msg) == "string" && msg.trim().length > 0 && msg.trim().length <= 1600 ? msg.trim() : false;
+
+    if(phone && msg){
+        var req = unirest("POST", "https://www.fast2sms.com/dev/bulk");
+
+        req.headers({
+            "authorization": "hMuLAK06zI1SGcWrVFpQ4eJwtTibgCYyk2NZOdD8U3a9loRPHXbsXy9rUCR12SacZYTInDz4eGlwWPOj"
+        });
+
+        req.form({
+            "sender_id": "FSTSMS",
+            "message": msg,
+            "language": "english",
+            "route": "p",
+            "numbers": phone,
+        });
+
+        req.end(function(res){
+            // console.log(res);
+            if(res.error){
+                callback(res.error);
+            }
+            else{
+                // console.log(res.body);
+                callback(false);            
+            }
+        });
+
+    }
+    else{
+        callback("Required parameters are missing or invalid");
     }
 }
 

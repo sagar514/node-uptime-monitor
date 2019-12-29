@@ -18,6 +18,7 @@
   "author": "dev69",
   "license": "ISC",
   "dependencies": {
-    "mongoose": "^5.8.2"
+    "mongoose": "^5.8.2",
+    "unirest": "^0.6.0"
   }
 }

@@ -38,7 +38,7 @@ var server = {};
 //     console.log(err);
 // });
 
-// helpers.sendTwilioSMS('7709140714', 'test', function(error){
+// helpers.sendSMS('7709140714', 'test', function(error){
 //     console.log("Error " + error);
 // });
 

@@ -172,7 +172,7 @@ workers.processCheckOutcome = function(checkData, checkOutcome){
 // Alert user via Twilio SMS API
 workers.alertUser = function(checkData){
     var msg = "Alert: Your check for " + checkData.method.toUpperCase() + checkData.protocol + "://" + checkData.url + " is " + checkData.state + " now."
-    helpers.sendTwilioSMS(checkData.userPhone, msg, function(err){
+    helpers.sendSMS(checkData.userPhone, msg, function(err){
         if(!err){
             console.log("Success: User was alerted, via sms", msg);
         }
